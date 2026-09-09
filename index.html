@@ -1,0 +1,806 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Kuis Family 100 - IPA Kelas 4 (Energi & Gaya)</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Poppins:wght@400;600;700;800;900&display=swap');
+        
+        body {
+            font-family: 'Poppins', sans-serif;
+            background: linear-gradient(135deg, #0f172a 0%, #1e1b4b 50%, #311042 100%);
+            min-height: 100vh;
+            color: #fff;
+        }
+
+        .board-border {
+            border: 8px solid #fbbf24;
+            box-shadow: 0 0 25px rgba(251, 191, 36, 0.5), inset 0 0 15px rgba(0, 0, 0, 0.7);
+        }
+
+        .card-flip {
+            perspective: 1000px;
+        }
+
+        .card-inner {
+            position: relative;
+            width: 100%;
+            height: 100%;
+            transition: transform 0.6s cubic-bezier(0.4, 0.2, 0.2, 1);
+            transform-style: preserve-3d;
+        }
+
+        .card-inner.flipped {
+            transform: rotateX(180deg);
+        }
+
+        .card-front, .card-back {
+            position: absolute;
+            width: 100%;
+            height: 100%;
+            backface-visibility: hidden;
+            display: flex;
+            align-items: center;
+            border-radius: 0.5rem;
+            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.3);
+        }
+
+        .card-front {
+            background: linear-gradient(180deg, #2563eb 0%, #1d4ed8 100%);
+            border: 2px solid #60a5fa;
+            justify-content: center;
+        }
+
+        .card-back {
+            background: linear-gradient(180deg, #059669 0%, #047857 100%);
+            border: 2px solid #34d399;
+            transform: rotateX(180deg);
+            padding: 0 0.75rem;
+            justify-content: space-between;
+        }
+
+        .strike-mark {
+            animation: popIn 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+        }
+
+        @keyframes popIn {
+            0% { transform: scale(0); opacity: 0; }
+            80% { transform: scale(1.2); }
+            100% { transform: scale(1); opacity: 1; }
+        }
+
+        .glow-text {
+            text-shadow: 0 0 10px rgba(251, 191, 36, 0.8);
+        }
+
+        .team-active {
+            border-color: #fbbf24 !important;
+            box-shadow: 0 0 15px rgba(251, 191, 36, 0.6);
+            transform: scale(1.03);
+        }
+    </style>
+</head>
+<body class="p-3 md:p-6 flex flex-col justify-between items-center min-h-screen">
+
+    <!-- Header -->
+    <header class="w-full max-w-5xl text-center mb-3">
+        <div class="inline-block bg-gradient-to-r from-amber-500 to-red-600 text-white font-extrabold text-2xl md:text-3xl px-8 py-2 rounded-full shadow-lg border-2 border-yellow-300 transform -rotate-1 mb-1">
+            KUIS FAMILY 100
+        </div>
+        <h2 class="text-base md:text-lg font-bold text-yellow-300 glow-text tracking-wide">Materi: IPA Kelas 4 (Energi, Gaya & Fotosintesis)</h2>
+    </header>
+
+    <!-- Scoreboards for Teams -->
+    <div class="w-full max-w-5xl grid grid-cols-2 gap-3 mb-3">
+        <!-- Tim Kiri -->
+        <div id="team-left-box" class="bg-slate-800/90 border-4 border-slate-700 rounded-xl p-3 flex flex-col items-center justify-center transition-all duration-300 relative overflow-hidden">
+            <span class="text-xs md:text-sm font-extrabold text-blue-400 uppercase tracking-wider"><i class="fa-solid fa-users mr-1"></i> TIM KIRI</span>
+            <span id="score-left" class="text-3xl md:text-4xl font-black text-amber-400 glow-text my-1">0</span>
+            <span id="badge-left" class="hidden bg-amber-500 text-slate-950 text-xs font-black px-2 py-0.5 rounded uppercase">MENJAWAB</span>
+        </div>
+
+        <!-- Tim Kanan -->
+        <div id="team-right-box" class="bg-slate-800/90 border-4 border-slate-700 rounded-xl p-3 flex flex-col items-center justify-center transition-all duration-300 relative overflow-hidden">
+            <span class="text-xs md:text-sm font-extrabold text-red-400 uppercase tracking-wider"><i class="fa-solid fa-users mr-1"></i> TIM KANAN</span>
+            <span id="score-right" class="text-3xl md:text-4xl font-black text-amber-400 glow-text my-1">0</span>
+            <span id="badge-right" class="hidden bg-amber-500 text-slate-950 text-xs font-black px-2 py-0.5 rounded uppercase">MENJAWAB</span>
+        </div>
+    </div>
+
+    <!-- Main Board -->
+    <main class="w-full max-w-5xl bg-slate-900/90 backdrop-blur-md rounded-2xl p-4 md:p-6 board-border flex flex-col gap-4 relative">
+        
+        <!-- Top Status Bar (Round, Current Round Points & Strikes) -->
+        <div class="flex flex-wrap justify-between items-center bg-slate-800/90 rounded-xl p-3 border border-slate-700 gap-2">
+            <div class="flex items-center gap-2">
+                <span class="text-slate-400 text-xs md:text-sm font-semibold">BABAK:</span>
+                <span id="current-round" class="bg-amber-500 text-slate-950 font-black px-2.5 py-0.5 rounded-lg text-base md:text-lg">1/10</span>
+            </div>
+            
+            <div class="text-center">
+                <span class="text-slate-400 text-xs font-semibold block">POIN BABAK INI</span>
+                <span id="round-score" class="text-xl md:text-2xl font-black text-amber-300">0</span>
+            </div>
+
+            <!-- Strike Indicator -->
+            <div class="flex items-center gap-1">
+                <span class="text-slate-400 text-xs font-semibold mr-1">SALAH:</span>
+                <div id="strikes-container" class="flex gap-1">
+                    <div class="w-6 h-6 md:w-7 md:h-7 rounded-full bg-slate-700 border-2 border-slate-600 flex items-center justify-center text-slate-500 font-bold text-xs">X</div>
+                    <div class="w-6 h-6 md:w-7 md:h-7 rounded-full bg-slate-700 border-2 border-slate-600 flex items-center justify-center text-slate-500 font-bold text-xs">X</div>
+                    <div class="w-6 h-6 md:w-7 md:h-7 rounded-full bg-slate-700 border-2 border-slate-600 flex items-center justify-center text-slate-500 font-bold text-xs">X</div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Question Box -->
+        <div class="bg-gradient-to-r from-blue-900/90 to-indigo-900/90 p-4 rounded-xl border-2 border-blue-500 shadow-inner text-center">
+            <p id="question-text" class="text-sm md:text-lg font-bold leading-relaxed text-blue-100">
+                Memuat pertanyaan...
+            </p>
+        </div>
+
+        <!-- Timer & Controls Bar -->
+        <div class="bg-slate-800/80 rounded-xl p-3 border border-slate-700 flex flex-col sm:flex-row items-center justify-between gap-3">
+            <div class="flex items-center gap-3 w-full sm:w-auto">
+                <button id="btn-timer" onclick="toggleTimer()" class="bg-indigo-600 hover:bg-indigo-500 text-white font-bold px-4 py-2 rounded-lg text-xs md:text-sm transition flex items-center gap-2">
+                    <i class="fa-solid fa-stopwatch"></i> <span id="timer-btn-text">Mulai Timer 60s</span>
+                </button>
+                <div class="flex-1 sm:w-36 bg-slate-900 h-4 rounded-full overflow-hidden border border-slate-700">
+                    <div id="timer-bar" class="bg-amber-400 h-full w-full transition-all duration-1000"></div>
+                </div>
+                <span id="timer-text" class="font-mono text-amber-400 font-bold text-lg min-w-[32px]">60s</span>
+            </div>
+
+            <!-- Helper Action Buttons for Teacher/Host -->
+            <div class="flex gap-2 w-full sm:w-auto justify-end">
+                <button onclick="revealAllAnswers()" class="bg-amber-600 hover:bg-amber-500 text-white font-bold px-3 py-2 rounded-lg text-xs transition flex items-center gap-1">
+                    <i class="fa-solid fa-eye"></i> Buka Semua Jawaban
+                </button>
+            </div>
+        </div>
+
+        <!-- Answers Board Grid -->
+        <div id="answers-grid" class="grid grid-cols-1 md:grid-cols-2 gap-3 my-1">
+            <!-- Cards dynamic -->
+        </div>
+
+        <!-- Input Form Section -->
+        <div id="input-section" class="flex flex-col md:flex-row gap-2">
+            <form id="answer-form" class="flex-1 flex gap-2">
+                <input type="text" id="answer-input" placeholder="Ketik jawaban di sini..." autocomplete="off"
+                    class="flex-1 bg-slate-800 border-2 border-slate-600 text-white placeholder-slate-400 text-sm md:text-base px-4 py-2.5 rounded-xl focus:outline-none focus:border-amber-400 focus:ring-2 focus:ring-amber-400/50 transition">
+                <button type="submit" id="btn-submit"
+                    class="bg-gradient-to-r from-amber-500 to-yellow-500 hover:from-amber-600 hover:to-yellow-600 text-slate-950 font-extrabold px-6 py-2.5 rounded-xl shadow-lg transition transform active:scale-95 text-sm md:text-base flex items-center gap-2">
+                    <i class="fa-solid fa-paper-plane"></i> JAWAB
+                </button>
+            </form>
+            <button id="btn-next-round" onclick="nextRound()" class="hidden bg-emerald-600 hover:bg-emerald-500 text-white font-bold px-6 py-2.5 rounded-xl shadow-lg transition flex items-center justify-center gap-2 text-sm md:text-base">
+                Lanjut Babak <i class="fa-solid fa-arrow-right"></i>
+            </button>
+        </div>
+
+        <!-- Edu Fact Box -->
+        <div id="edu-fact-box" class="hidden bg-emerald-950/80 border-2 border-emerald-500/80 rounded-xl p-3 text-xs md:text-sm text-emerald-200">
+            <h4 class="font-bold text-emerald-400 flex items-center gap-2 mb-1">
+                <i class="fa-solid fa-lightbulb"></i> Fakta Edukasi Sains:
+            </h4>
+            <p id="edu-fact-text">Penjelasan materi edukasi...</p>
+        </div>
+
+    </main>
+
+    <!-- Modal Selecting Active Team First -->
+    <div id="team-select-modal" class="fixed inset-0 bg-black/85 z-50 flex items-center justify-center p-4 backdrop-blur-md">
+        <div class="bg-slate-900 border-4 border-amber-400 rounded-2xl max-w-lg w-full p-6 text-center shadow-2xl">
+            <h3 class="text-xl md:text-2xl font-black text-amber-400 mb-2">BABAK <span id="modal-round-num">1</span></h3>
+            <p class="text-slate-300 text-sm mb-6">Pilih Tim mana yang berhak menjawab terlebih dahulu di babak ini!</p>
+            
+            <div class="grid grid-cols-2 gap-4 mb-4">
+                <button onclick="selectStartingTeam('left')" class="bg-gradient-to-br from-blue-700 to-blue-900 hover:from-blue-600 hover:to-blue-800 border-2 border-blue-400 text-white p-5 rounded-xl flex flex-col items-center gap-2 shadow-lg transition transform active:scale-95">
+                    <i class="fa-solid fa-users text-3xl text-blue-300"></i>
+                    <span class="font-extrabold text-base">TIM KIRI</span>
+                </button>
+                <button onclick="selectStartingTeam('right')" class="bg-gradient-to-br from-red-700 to-red-900 hover:from-red-600 hover:to-red-800 border-2 border-red-400 text-white p-5 rounded-xl flex flex-col items-center gap-2 shadow-lg transition transform active:scale-95">
+                    <i class="fa-solid fa-users text-3xl text-red-300"></i>
+                    <span class="font-extrabold text-base">TIM KANAN</span>
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Steal Chance Banner Modal -->
+    <div id="steal-banner-modal" class="fixed inset-0 bg-red-950/90 z-50 flex items-center justify-center p-4 hidden backdrop-blur-md">
+        <div class="bg-slate-900 border-4 border-red-500 rounded-2xl max-w-md w-full p-6 text-center shadow-2xl">
+            <div class="w-16 h-16 bg-red-600 text-white rounded-full flex items-center justify-center text-3xl font-black mx-auto mb-3 shadow-lg">
+                <i class="fa-solid fa-hand-holding-hand"></i>
+            </div>
+            <h3 class="text-2xl font-black text-red-400 mb-2">3X GAGAL! KESEMPATAN MENCURI POIN!</h3>
+            <p id="steal-description-text" class="text-slate-200 text-sm mb-6">
+                Kesempatan berpindah ke Tim B! Jika berhasil menjawab 1 kata dengan benar, seluruh poin di papan babak ini menjadi milik Anda!
+            </p>
+            <button onclick="startStealTurn()" class="w-full bg-amber-500 hover:bg-amber-400 text-slate-950 font-extrabold py-3 rounded-xl shadow-lg transition">
+                MULAI MENCURI POIN
+            </button>
+        </div>
+    </div>
+
+    <!-- Overlay Big Red Strike -->
+    <div id="strike-overlay" class="fixed inset-0 bg-red-950/80 z-50 flex flex-col items-center justify-center hidden backdrop-blur-sm">
+        <div id="strike-x-box" class="flex gap-4"></div>
+        <p class="text-amber-300 font-bold text-xl mt-6">JAWABAN TIDAK ADA / SALAH!</p>
+    </div>
+
+    <!-- Modal Game Over -->
+    <div id="game-over-modal" class="fixed inset-0 bg-black/80 z-50 flex items-center justify-center p-4 hidden backdrop-blur-md">
+        <div class="bg-slate-900 border-4 border-amber-400 rounded-2xl max-w-md w-full p-6 text-center shadow-2xl relative">
+            <div class="w-20 h-20 bg-amber-500 text-slate-950 rounded-full flex items-center justify-center text-4xl font-black mx-auto -mt-14 border-4 border-slate-900 shadow-lg">
+                <i class="fa-solid fa-trophy"></i>
+            </div>
+            <h3 class="text-2xl md:text-3xl font-black text-amber-400 mt-4">KUIS SELESAI!</h3>
+            <p id="winner-text" class="text-white font-bold text-lg mt-2">Pemenang: Tim Kiri</p>
+            
+            <div class="grid grid-cols-2 gap-3 my-4">
+                <div class="bg-blue-950/80 p-3 rounded-xl border border-blue-500">
+                    <span class="text-xs text-blue-300 block">Skor Tim Kiri</span>
+                    <span id="final-score-left" class="text-2xl font-black text-amber-400">0</span>
+                </div>
+                <div class="bg-red-950/80 p-3 rounded-xl border border-red-500">
+                    <span class="text-xs text-red-300 block">Skor Tim Kanan</span>
+                    <span id="final-score-right" class="text-2xl font-black text-amber-400">0</span>
+                </div>
+            </div>
+
+            <button onclick="resetGame()" class="w-full bg-gradient-to-r from-amber-500 to-red-500 hover:from-amber-600 hover:to-red-600 text-white font-extrabold py-3 px-6 rounded-xl shadow-lg transition transform active:scale-95">
+                <i class="fa-solid fa-rotate-right mr-2"></i> MAIN LAGI
+            </button>
+        </div>
+    </div>
+
+    <footer class="mt-4 text-center text-xs text-slate-400 flex flex-col items-center gap-1.5">
+        <div>Media Pembelajaran Ilmu Pengetahuan Alam (IPA) &bull; Kelas 4 SD</div>
+        <div class="text-amber-400/90 font-semibold text-[11px] tracking-wider uppercase bg-slate-800/80 px-3 py-1 rounded-full border border-amber-500/30 shadow-sm flex items-center gap-1.5">
+            <i class="fa-solid fa-code text-amber-400"></i>
+            <span>Interactive Learning Tool</span>
+        </div>
+    </footer>
+
+    <script>
+        // Audio Synthesizer
+        const soundEffects = {
+            ctx: null,
+            init() {
+                if (!this.ctx) {
+                    this.ctx = new (window.AudioContext || window.webkitAudioContext)();
+                }
+            },
+            playCorrect() {
+                this.init();
+                const now = this.ctx.currentTime;
+                const osc = this.ctx.createOscillator();
+                const gain = this.ctx.createGain();
+                osc.type = 'triangle';
+                osc.frequency.setValueAtTime(523.25, now);
+                osc.frequency.setValueAtTime(659.25, now + 0.1);
+                osc.frequency.setValueAtTime(783.99, now + 0.2);
+                osc.frequency.setValueAtTime(1046.50, now + 0.3);
+                gain.gain.setValueAtTime(0.3, now);
+                gain.gain.exponentialRampToValueAtTime(0.01, now + 0.6);
+                osc.connect(gain);
+                gain.connect(this.ctx.destination);
+                osc.start(now);
+                osc.stop(now + 0.6);
+            },
+            playWrong() {
+                this.init();
+                const now = this.ctx.currentTime;
+                const osc = this.ctx.createOscillator();
+                const gain = this.ctx.createGain();
+                osc.type = 'sawtooth';
+                osc.frequency.setValueAtTime(150, now);
+                osc.frequency.linearRampToValueAtTime(80, now + 0.4);
+                gain.gain.setValueAtTime(0.4, now);
+                gain.gain.exponentialRampToValueAtTime(0.01, now + 0.4);
+                osc.connect(gain);
+                gain.connect(this.ctx.destination);
+                osc.start(now);
+                osc.stop(now + 0.4);
+            },
+            playWin() {
+                this.init();
+                const notes = [400, 500, 600, 800];
+                notes.forEach((freq, index) => {
+                    const osc = this.ctx.createOscillator();
+                    const gain = this.ctx.createGain();
+                    osc.frequency.value = freq;
+                    gain.gain.setValueAtTime(0.2, this.ctx.currentTime + index * 0.1);
+                    gain.gain.exponentialRampToValueAtTime(0.01, this.ctx.currentTime + index * 0.1 + 0.3);
+                    osc.connect(gain);
+                    gain.connect(this.ctx.destination);
+                    osc.start(this.ctx.currentTime + index * 0.1);
+                    osc.stop(this.ctx.currentTime + index * 0.1 + 0.3);
+                });
+            }
+        };
+
+        // 10 Questions Database untuk IPA Kelas 4 (Energi, Fotosintesis, Gaya)
+        const quizData = [
+            {
+                question: "1. Sebutkan bentuk-bentuk energi yang ada di sekitar kita!",
+                answers: [
+                    { text: "Energi Panas / Kalor", points: 35, keywords: ["panas", "kalor"] },
+                    { text: "Energi Cahaya", points: 25, keywords: ["cahaya"] },
+                    { text: "Energi Gerak / Kinetik", points: 20, keywords: ["gerak", "kinetik"] },
+                    { text: "Energi Listrik", points: 15, keywords: ["listrik"] },
+                    { text: "Energi Bunyi", points: 5, keywords: ["bunyi", "suara"] }
+                ],
+                fact: "Energi listrik adalah bentuk energi yang paling banyak digunakan manusia karena mudah diubah ke berbagai bentuk energi lain."
+            },
+            {
+                question: "2. Apa saja benda yang dapat menjadi sumber energi panas di bumi?",
+                answers: [
+                    { text: "Matahari", points: 40, keywords: ["matahari"] },
+                    { text: "Api", points: 30, keywords: ["api"] },
+                    { text: "Gesekan Dua Benda", points: 15, keywords: ["gesekan", "gosokan"] },
+                    { text: "Panas Bumi / Geotermal", points: 10, keywords: ["panas bumi", "geotermal"] },
+                    { text: "Listrik", points: 5, keywords: ["listrik"] }
+                ],
+                fact: "Matahari merupakan sumber energi panas dan cahaya terbesar di bumi yang sangat penting untuk siklus kehidupan."
+            },
+            {
+                question: "3. Apa saja yang dibutuhkan tumbuhan untuk dapat melakukan Fotosintesis?",
+                answers: [
+                    { text: "Cahaya Matahari", points: 35, keywords: ["cahaya", "matahari", "sinar"] },
+                    { text: "Air (H2O)", points: 30, keywords: ["air", "h2o"] },
+                    { text: "Karbon Dioksida (CO2)", points: 20, keywords: ["karbon dioksida", "karbondioksida", "co2"] },
+                    { text: "Klorofil (Zat Hijau Daun)", points: 15, keywords: ["klorofil", "zat hijau"] }
+                ],
+                fact: "Klorofil berfungsi menangkap energi cahaya matahari. Proses fotosintesis mayoritas terjadi di bagian daun."
+            },
+            {
+                question: "4. Apa saja yang dihasilkan dari proses Fotosintesis pada tumbuhan?",
+                answers: [
+                    { text: "Oksigen (O2)", points: 50, keywords: ["oksigen", "o2"] },
+                    { text: "Karbohidrat / Glukosa / Gula", points: 40, keywords: ["karbohidrat", "glukosa", "gula", "makanan"] },
+                    { text: "Uap Air", points: 10, keywords: ["uap air", "air"] }
+                ],
+                fact: "Oksigen yang dihasilkan tumbuhan langsung dilepaskan ke udara dan menjadi sumber kehidupan bernapas bagi manusia dan hewan."
+            },
+            {
+                question: "5. Mengapa energi sangat penting atau berguna bagi kehidupan manusia?",
+                answers: [
+                    { text: "Untuk Bergerak / Beraktivitas", points: 35, keywords: ["gerak", "bergerak", "aktivitas"] },
+                    { text: "Menyalakan Alat Elektronik", points: 30, keywords: ["listrik", "elektronik", "alat"] },
+                    { text: "Untuk Penerangan", points: 15, keywords: ["terang", "cahaya", "lampu", "penerangan"] },
+                    { text: "Untuk Memasak / Menghangatkan", points: 10, keywords: ["masak", "memasak", "hangat"] },
+                    { text: "Untuk Transportasi (Kendaraan)", points: 10, keywords: ["kendaraan", "mobil", "motor", "transportasi"] }
+                ],
+                fact: "Hukum Kekekalan Energi berbunyi: Energi tidak dapat diciptakan atau dimusnahkan, tetapi hanya dapat diubah dari satu bentuk ke bentuk lainnya."
+            },
+            {
+                question: "6. Sebutkan macam-macam Gaya yang dipelajari di kelas 4!",
+                answers: [
+                    { text: "Gaya Otot", points: 30, keywords: ["otot"] },
+                    { text: "Gaya Gesek", points: 25, keywords: ["gesek", "gesekan"] },
+                    { text: "Gaya Magnet", points: 20, keywords: ["magnet"] },
+                    { text: "Gaya Gravitasi", points: 15, keywords: ["gravitasi", "tarik bumi"] },
+                    { text: "Gaya Listrik", points: 5, keywords: ["listrik", "statis"] },
+                    { text: "Gaya Pegas", points: 5, keywords: ["pegas", "per"] }
+                ],
+                fact: "Dalam Sains, Gaya adalah dorongan atau tarikan yang dapat menyebabkan benda bergerak, berhenti, atau berubah bentuk."
+            },
+            {
+                question: "7. Sebutkan contoh aktivitas / kegiatan yang menggunakan Gaya Otot!",
+                answers: [
+                    { text: "Mendorong Meja / Gerobak", points: 30, keywords: ["dorong", "mendorong"] },
+                    { text: "Menarik Tali Tambang", points: 25, keywords: ["tarik", "menarik", "tambang"] },
+                    { text: "Mengangkat Barang", points: 20, keywords: ["angkat", "mengangkat"] },
+                    { text: "Menendang Bola", points: 15, keywords: ["tendang", "menendang"] },
+                    { text: "Mengayuh Sepeda", points: 10, keywords: ["kayuh", "gowes", "sepeda"] }
+                ],
+                fact: "Gaya otot bersumber dari sistem rangka dan otot tubuh manusia (melalui kontraksi dan relaksasi)."
+            },
+            {
+                question: "8. Apa manfaat atau akibat dari adanya Gaya Gesek dalam kehidupan?",
+                answers: [
+                    { text: "Membuat Benda Tidak Licin / Tergelincir", points: 35, keywords: ["licin", "tergelincir", "jatuh"] },
+                    { text: "Menghentikan Benda Bergerak (Rem)", points: 30, keywords: ["henti", "berhenti", "rem"] },
+                    { text: "Menghasilkan Energi Panas", points: 20, keywords: ["panas", "hangat"] },
+                    { text: "Menghambat Gerakan Benda", points: 15, keywords: ["lambat", "pelan", "hambat"] }
+                ],
+                fact: "Semakin kasar permukaan sebuah benda atau lintasan, maka semakin besar pula gaya gesek yang dihasilkan."
+            },
+            {
+                question: "9. Perubahan energi apa saja yang mungkin terjadi pada alat Kipas Angin atau Mesin Cuci?",
+                answers: [
+                    { text: "Energi Listrik Menjadi Gerak", points: 80, keywords: ["listrik jadi gerak", "listrik ke gerak", "listrik menjadi gerak", "listrik jadi kinetik"] },
+                    { text: "Energi Listrik Menjadi Bunyi", points: 10, keywords: ["bunyi", "suara"] },
+                    { text: "Menghasilkan Energi Panas (Sisa Mesin)", points: 10, keywords: ["panas", "kalor"] }
+                ],
+                fact: "Motor penggerak di dalam kipas dan mesin cuci mengubah energi listrik untuk memutar kumparan menjadi energi kinetik (gerak)."
+            },
+            {
+                question: "10. Sebutkan contoh benda atau alat yang bekerja memanfaatkan Gaya Pegas!",
+                answers: [
+                    { text: "Ketapel", points: 35, keywords: ["ketapel"] },
+                    { text: "Kasur Springbed", points: 25, keywords: ["kasur", "springbed", "per"] },
+                    { text: "Busur Panah", points: 20, keywords: ["panah", "busur"] },
+                    { text: "Trampolin", points: 10, keywords: ["trampolin"] },
+                    { text: "Karet Gelang", points: 10, keywords: ["karet", "gelang"] }
+                ],
+                fact: "Gaya pegas ditimbulkan oleh sifat elastis atau kelenturan suatu benda yang selalu ingin kembali ke bentuk asalnya."
+            }
+        ];
+
+        // State Variables
+        let currentRoundIndex = 0;
+        let scoreLeft = 0;
+        let scoreRight = 0;
+        let roundScore = 0;
+        let strikes = 0;
+        let revealedAnswersCount = 0;
+        let answeredCurrentRound = [];
+        
+        let activeTeam = null; // 'left' or 'right'
+        let originalStartingTeam = null; // Who started the round
+        let isStealPhase = false; // Is this the 1-try steal attempt?
+
+        // Timer State
+        let timerInterval = null;
+        let timeLeft = 60;
+        let isTimerRunning = false;
+
+        // DOM Elements
+        const questionTextEl = document.getElementById("question-text");
+        const answersGridEl = document.getElementById("answers-grid");
+        const answerFormEl = document.getElementById("answer-form");
+        const answerInputEl = document.getElementById("answer-input");
+        const strikesContainerEl = document.getElementById("strikes-container");
+        const roundScoreEl = document.getElementById("round-score");
+        const currentRoundEl = document.getElementById("current-round");
+        const btnNextRoundEl = document.getElementById("btn-next-round");
+        const strikeOverlayEl = document.getElementById("strike-overlay");
+        const strikeXBoxEl = document.getElementById("strike-x-box");
+        const eduFactBoxEl = document.getElementById("edu-fact-box");
+        const eduFactTextEl = document.getElementById("edu-fact-text");
+        const gameOverModalEl = document.getElementById("game-over-modal");
+        
+        const teamSelectModalEl = document.getElementById("team-select-modal");
+        const modalRoundNumEl = document.getElementById("modal-round-num");
+        const stealBannerModalEl = document.getElementById("steal-banner-modal");
+        const stealDescriptionTextEl = document.getElementById("steal-description-text");
+
+        const teamLeftBox = document.getElementById("team-left-box");
+        const teamRightBox = document.getElementById("team-right-box");
+        const badgeLeft = document.getElementById("badge-left");
+        const badgeRight = document.getElementById("badge-right");
+        const scoreLeftEl = document.getElementById("score-left");
+        const scoreRightEl = document.getElementById("score-right");
+
+        const timerBarEl = document.getElementById("timer-bar");
+        const timerTextEl = document.getElementById("timer-text");
+        const timerBtnTextEl = document.getElementById("timer-btn-text");
+
+        // Start Round Initialization
+        function initRound() {
+            resetTimer();
+            const currentData = quizData[currentRoundIndex];
+            strikes = 0;
+            roundScore = 0;
+            revealedAnswersCount = 0;
+            isStealPhase = false;
+            answeredCurrentRound = new Array(currentData.answers.length).fill(false);
+
+            // Update UI Header & Scores
+            currentRoundEl.innerText = `${currentRoundIndex + 1}/${quizData.length}`;
+            roundScoreEl.innerText = "0";
+            questionTextEl.innerText = currentData.question;
+            btnNextRoundEl.classList.add("hidden");
+            eduFactBoxEl.classList.add("hidden");
+            answerInputEl.disabled = false;
+            answerInputEl.value = "";
+
+            updateStrikesUI();
+            renderAnswerCards(currentData.answers);
+
+            // Prompt Team Selection Modal
+            modalRoundNumEl.innerText = currentRoundIndex + 1;
+            teamSelectModalEl.classList.remove("hidden");
+        }
+
+        // Team Selector Callback
+        function selectStartingTeam(team) {
+            activeTeam = team;
+            originalStartingTeam = team;
+            teamSelectModalEl.classList.add("hidden");
+            updateTeamUI();
+            answerInputEl.focus();
+        }
+
+        // Highlight Active Team
+        function updateTeamUI() {
+            teamLeftBox.classList.remove("team-active");
+            teamRightBox.classList.remove("team-active");
+            badgeLeft.classList.add("hidden");
+            badgeRight.classList.add("hidden");
+
+            if (activeTeam === 'left') {
+                teamLeftBox.classList.add("team-active");
+                badgeLeft.classList.remove("hidden");
+            } else if (activeTeam === 'right') {
+                teamRightBox.classList.add("team-active");
+                badgeRight.classList.remove("hidden");
+            }
+        }
+
+        // Render Blank Answer Cards
+        function renderAnswerCards(answers) {
+            answersGridEl.innerHTML = "";
+            answers.forEach((ans, idx) => {
+                const card = document.createElement("div");
+                card.className = "card-flip h-14 md:h-16 w-full cursor-pointer";
+                card.innerHTML = `
+                    <div id="card-inner-${idx}" class="card-inner">
+                        <div class="card-front text-amber-300 font-extrabold text-lg md:text-xl shadow-md">
+                            ${idx + 1}
+                        </div>
+                        <div class="card-back text-white font-bold text-sm md:text-base">
+                            <span class="truncate pr-2">${ans.text}</span>
+                            <span class="bg-amber-400 text-slate-950 px-2 py-0.5 rounded text-xs md:text-sm font-black shadow">${ans.points}</span>
+                        </div>
+                    </div>
+                `;
+                answersGridEl.appendChild(card);
+            });
+        }
+
+        // Handle Answer Submission
+        answerFormEl.addEventListener("submit", (e) => {
+            e.preventDefault();
+            const inputVal = answerInputEl.value.trim().toLowerCase();
+            if (!inputVal) return;
+
+            resetTimer(); // Reset timer upon answering
+            const currentData = quizData[currentRoundIndex];
+            let matchFound = false;
+
+            currentData.answers.forEach((ansObj, idx) => {
+                if (!answeredCurrentRound[idx]) {
+                    const isMatch = ansObj.keywords.some(key => inputVal.includes(key.toLowerCase()));
+                    if (isMatch) {
+                        matchFound = true;
+                        revealAnswer(idx, ansObj.points);
+                    }
+                }
+            });
+
+            if (matchFound) {
+                if (isStealPhase) {
+                    // Steal Successful! Stealing team receives all round score
+                    awardRoundPoints(activeTeam);
+                    finishRoundPhase();
+                } else {
+                    // Normal correct answer
+                    if (revealedAnswersCount === currentData.answers.length) {
+                        awardRoundPoints(activeTeam);
+                        finishRoundPhase();
+                    }
+                }
+            } else {
+                handleWrongAnswer();
+            }
+
+            answerInputEl.value = "";
+        });
+
+        // Reveal Correct Answer Card
+        function revealAnswer(index, points) {
+            answeredCurrentRound[index] = true;
+            revealedAnswersCount++;
+
+            const cardInner = document.getElementById(`card-inner-${index}`);
+            cardInner.classList.add("flipped");
+
+            soundEffects.playCorrect();
+
+            roundScore += points;
+            roundScoreEl.innerText = roundScore;
+        }
+
+        // Handle Incorrect Answer
+        function handleWrongAnswer() {
+            soundEffects.playWrong();
+
+            if (isStealPhase) {
+                // Steal failed! Poin diberikan ke tim asal
+                showStrikeAnimation(1);
+                awardRoundPoints(originalStartingTeam);
+                finishRoundPhase();
+            } else {
+                strikes++;
+                updateStrikesUI();
+                showStrikeAnimation(strikes);
+
+                if (strikes >= 3) {
+                    // Trigger Steal Chance
+                    setTimeout(() => {
+                        triggerStealChance();
+                    }, 1200);
+                }
+            }
+        }
+
+        // Trigger Steal Opportunity for Opponent
+        function triggerStealChance() {
+            isStealPhase = true;
+            activeTeam = (originalStartingTeam === 'left') ? 'right' : 'left';
+            
+            const stealTeamName = (activeTeam === 'left') ? "TIM KIRI" : "TIM KANAN";
+            stealDescriptionTextEl.innerText = `Kesempatan berpindah ke ${stealTeamName}! Jika berhasil menebak 1 jawaban benar, seluruh poin (${roundScore} poin) akan DICURI!`;
+            stealBannerModalEl.classList.remove("hidden");
+        }
+
+        function startStealTurn() {
+            stealBannerModalEl.classList.add("hidden");
+            updateTeamUI();
+            answerInputEl.focus();
+        }
+
+        // Award Round Points to Team
+        function awardRoundPoints(team) {
+            if (team === 'left') {
+                scoreLeft += roundScore;
+                scoreLeftEl.innerText = scoreLeft;
+            } else {
+                scoreRight += roundScore;
+                scoreRightEl.innerText = scoreRight;
+            }
+        }
+
+        // Update Strikes Indicator
+        function updateStrikesUI() {
+            const strikeIcons = strikesContainerEl.querySelectorAll("div");
+            strikeIcons.forEach((icon, idx) => {
+                if (idx < strikes) {
+                    icon.className = "w-6 h-6 md:w-7 md:h-7 rounded-full bg-red-600 border-2 border-red-400 flex items-center justify-center text-white font-black text-xs strike-mark shadow-lg";
+                } else {
+                    icon.className = "w-6 h-6 md:w-7 md:h-7 rounded-full bg-slate-800 border-2 border-slate-600 flex items-center justify-center text-slate-500 font-bold text-xs";
+                }
+            });
+        }
+
+        // Show Big Red Strike Flash Animation
+        function showStrikeAnimation(count) {
+            strikeXBoxEl.innerHTML = "";
+            for (let i = 0; i < count; i++) {
+                const xMark = document.createElement("div");
+                xMark.className = "text-red-500 text-7xl md:text-9xl font-black drop-shadow-[0_0_20px_rgba(239,68,68,0.8)] strike-mark";
+                xMark.innerHTML = '<i class="fa-solid fa-xmark"></i>';
+                strikeXBoxEl.appendChild(xMark);
+            }
+
+            strikeOverlayEl.classList.remove("hidden");
+            setTimeout(() => {
+                strikeOverlayEl.classList.add("hidden");
+            }, 1200);
+        }
+
+        // Open All Unrevealed Answers (Teacher Control)
+        function revealAllAnswers() {
+            const currentData = quizData[currentRoundIndex];
+            currentData.answers.forEach((_, idx) => {
+                document.getElementById(`card-inner-${idx}`).classList.add("flipped");
+            });
+        }
+
+        // Wrap Up Round Phase
+        function finishRoundPhase() {
+            answerInputEl.disabled = true;
+            btnNextRoundEl.classList.remove("hidden");
+
+            // Show Edu Fact
+            const currentData = quizData[currentRoundIndex];
+            eduFactTextEl.innerText = currentData.fact;
+            eduFactBoxEl.classList.remove("hidden");
+        }
+
+        // Next Round Navigation
+        function nextRound() {
+            if (currentRoundIndex < quizData.length - 1) {
+                currentRoundIndex++;
+                initRound();
+            } else {
+                endGame();
+            }
+        }
+
+        // Timer Functions
+        function toggleTimer() {
+            if (isTimerRunning) {
+                resetTimer();
+            } else {
+                startTimer();
+            }
+        }
+
+        function startTimer() {
+            timeLeft = 60;
+            isTimerRunning = true;
+            timerBtnTextEl.innerText = "Stop Timer";
+            updateTimerUI();
+
+            timerInterval = setInterval(() => {
+                timeLeft--;
+                updateTimerUI();
+                if (timeLeft <= 0) {
+                    clearInterval(timerInterval);
+                    isTimerRunning = false;
+                    timerBtnTextEl.innerText = "Mulai Timer 60s";
+                    // Jika waktu habis, anggap jawaban salah dan berikan 1 Strike (X)
+                    handleWrongAnswer();
+                }
+            }, 1000);
+        }
+
+        function resetTimer() {
+            clearInterval(timerInterval);
+            isTimerRunning = false;
+            timeLeft = 60;
+            timerBtnTextEl.innerText = "Mulai Timer 60s";
+            updateTimerUI();
+        }
+
+        function updateTimerUI() {
+            timerTextEl.innerText = `${timeLeft}s`;
+            const percentage = (timeLeft / 60) * 100;
+            timerBarEl.style.width = `${percentage}%`;
+            
+            if (timeLeft <= 10) {
+                timerBarEl.className = "bg-red-500 h-full transition-all duration-1000";
+            } else {
+                timerBarEl.className = "bg-amber-400 h-full transition-all duration-1000";
+            }
+        }
+
+        // End Game Modal & Results
+        function endGame() {
+            soundEffects.playWin();
+            document.getElementById("final-score-left").innerText = scoreLeft;
+            document.getElementById("final-score-right").innerText = scoreRight;
+
+            const winnerTextEl = document.getElementById("winner-text");
+            if (scoreLeft > scoreRight) {
+                winnerTextEl.innerText = "🏆 PEMENANG: TIM KIRI!";
+                winnerTextEl.className = "text-blue-400 font-extrabold text-xl mt-2";
+            } else if (scoreRight > scoreLeft) {
+                winnerTextEl.innerText = "🏆 PEMENANG: TIM KANAN!";
+                winnerTextEl.className = "text-red-400 font-extrabold text-xl mt-2";
+            } else {
+                winnerTextEl.innerText = "🤝 HASIL SERI!";
+                winnerTextEl.className = "text-amber-300 font-extrabold text-xl mt-2";
+            }
+
+            gameOverModalEl.classList.remove("hidden");
+        }
+
+        // Reset Entire Game
+        function resetGame() {
+            currentRoundIndex = 0;
+            scoreLeft = 0;
+            scoreRight = 0;
+            scoreLeftEl.innerText = "0";
+            scoreRightEl.innerText = "0";
+            gameOverModalEl.classList.add("hidden");
+            initRound();
+        }
+
+        // Initialize on load
+        window.onload = () => {
+            initRound();
+        };
+    </script>
+</body>
+</html>
